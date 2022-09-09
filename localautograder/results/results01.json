@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "max_score": 0,
+      "name": "Found required javascript/public directory in student submission",
+      "output": "",
+      "score": 0
+    }
+  ]
+}
