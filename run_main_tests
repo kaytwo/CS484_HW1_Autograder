@@ -8,35 +8,22 @@ run_command () {
     COMMAND_LABEL=$2
     COMMAND_TMP_FILE_NAME=$3
     RESULTS_FILE_NAME=$4
-    SKIP_SUCCESS_CHECK=$5
-
-    pwd
-    ls -al
+    MAXIMUM_POINTS=${5:-1}
 
     # Try to compile the maven project
     $COMMAND_TO_RUN | tee "/tmp/${COMMAND_TMP_FILE_NAME}.out"
 
-    if [ ${SKIP_SUCCESS_CHECK} -eq 1 ]
+    if [ ${PIPESTATUS[0]} -eq 0 ]
     then
-            echo "[GS - Main Tests] ${COMMAND_LABEL} completed."
+        echo "[GS - Main Tests] ${COMMAND_LABEL} successful!"
 
-            # Optionally output successful mvn compile message
-            if [ "$CONFIG_OUTPUT_PASSING_SANITY_TESTS" = true ] ; then
-                python3 "$PYTHON_JSON_TOOL" -p -t "Step ${COMMAND_LABEL} completed with status ${PIPESTATUS[0]}"> "$OUTPUT_DIR"/"$RESULTS_FILE_NAME"
-            fi
-    else
-        if [ ${PIPESTATUS[0]} -eq 0 ]
-        then
-            echo "[GS - Main Tests] ${COMMAND_LABEL} successful!"
-
-            # Optionally output successful mvn compile message
-            if [ "$CONFIG_OUTPUT_PASSING_SANITY_TESTS" = true ] ; then
-                python3 "$PYTHON_JSON_TOOL" -p -t "Step ${COMMAND_LABEL} successful"> "$OUTPUT_DIR"/"$RESULTS_FILE_NAME"
-            fi
-        else
-            echo "[GS - Main Tests] ${COMMAND_LABEL} failed! Exiting..."
-            python3 "$PYTHON_JSON_TOOL" -t "Step ${COMMAND_LABEL} failed" -i "/tmp/${COMMAND_TMP_FILE_NAME}.out" > "$OUTPUT_DIR"/"$RESULTS_FILE_NAME"
+        # Optionally output successful mvn compile message
+        if [ "$CONFIG_OUTPUT_PASSING_SANITY_TESTS" = true ] ; then
+            python3 "$PYTHON_JSON_TOOL" -m $MAXIMUM_POINTS -p -t "Step ${COMMAND_LABEL} successful"> "$OUTPUT_DIR"/"$RESULTS_FILE_NAME"
         fi
+    else
+        echo "[GS - Main Tests] ${COMMAND_LABEL} failed! Exiting..."
+        python3 "$PYTHON_JSON_TOOL" -m $MAXIMUM_POINTS -t "Step ${COMMAND_LABEL} failed" -i "/tmp/${COMMAND_TMP_FILE_NAME}.out" > "$OUTPUT_DIR"/"$RESULTS_FILE_NAME"
     fi
 }
 
@@ -68,13 +55,15 @@ source "$DIR"/grading.config
 #
 ###########################################################################################
 
-cd "$DIR"/staging_main/javascript
+cd "$STUDENT_SUBMISSION_DIR"
 
-rm -rf "$DIR"/staging_main/javascript/node_modules
+rm -rf node_modules
 
-run_command "npm install" "npm install" "npm_install" "results10.json" 1
+run_command "npm install" "npm install" "npm_install" "results10.json" 0
 
-run_command "npx react-scripts test --json --watchAll=false --outputFile jest-output.json" "Instructor tests" "instuctor_tests" "results11.json" 1
+run_command "npm run lint" "npm run lint" "npm_run_lint" "results_lint.json" 1
 
-$JEST_JSON_TOOL -i jest-output.json -o "$OUTPUT_DIR"/"results12.json"
+# run_command "npx react-scripts test --json --watchAll=false --outputFile jest-output.json" "Instructor tests" "instuctor_tests" "results11.json" 1
+
+# $JEST_JSON_TOOL -i jest-output.json -o "$OUTPUT_DIR"/"results12.json"
 

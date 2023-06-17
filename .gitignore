@@ -24,6 +24,4 @@ Autograder.zip
 .project
 .settings/
 
-# localautograder/
-# staging_main/*
-# staging_test/*
+localautograder/
