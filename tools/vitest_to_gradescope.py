@@ -27,7 +27,7 @@ def get_name(assertion):
 def get_max_score(assertion):
     regex=r'^(\(\s*(\d+)\s*pt[s]?[\s]*\))?(.*)$'
     match = re.search(regex, assertion["title"])
-    return match.group(2)
+    return match.group(2) if match.group(2) is not None else 1
 
 def get_score(assertion):
     max_score = get_max_score(assertion)
@@ -58,20 +58,6 @@ def main():
 
     assertions = list(flatten(map(lambda x:x["assertionResults"], jest_data["testResults"])))
     gradescope_tests = list(map(jest_assertion_to_gradescope, assertions))
-
-    if not jest_data["success"]:
-        messages = "\n".join(list(map(lambda x:x["message"].replace("\"","\\\""), jest_data["testResults"])))
-        
-        gradescope_tests.append({
-                "name": "jest test failed",
-                "max_score": 1,
-                "score": 0, 
-                "output": messages
-        })
-
-    print("jest_data",json.dumps(jest_data, indent=2))
-    print("asssertions",json.dumps(assertions, indent=2))
-    print("gradescope_tests",json.dumps(gradescope_tests, indent=2))
 
     if args.output != None:
       with open(args.output,'w') as json_data:

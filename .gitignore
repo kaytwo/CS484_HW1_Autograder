@@ -1,27 +1,11 @@
-
-jest-output.json
-
 node_modules
-build
-
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
 .DS_Store
-.travis.yml
-*.iml
 staging/.*
 Autograder.zip
-.classpath
-.project
-.settings/
 
 localautograder/
+.vscode/
+merges/**
+!merges/.gitkeep
+overrides/**
+!overrides/.gitkeep
