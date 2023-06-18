@@ -18,36 +18,13 @@ from pathlib import Path
 # Initialize command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--title", help="Result title")
-parser.add_argument("-b", "--body", help="Result body")
+parser.add_argument("-b", "--body", help="Result body. overwrites input received via --input/-i")
 parser.add_argument("-i", "--input", help="Input file to read as results body instead of --body")
 parser.add_argument("-c", "--combine", help="Combine all the json files in a specified folder and produce a single combined output")
-parser.add_argument("-p", "--passtest", help="Grade the test as 0/0 (passing). If not set, the grade will be 0/1", action='store_true')
+parser.add_argument("-m", "--maxpoints", help="points to award for this test")
+parser.add_argument("-p", "--passtest", help="Grade the test as max/max (passing). If not set, the grade will be 0/max", action='store_true')
 
 args = parser.parse_args()
-
-if args.input == None and args.title != None:
-    bod = ""
-    max_score = 1
-    if args.body != None:
-        bod = args.body
-    if args.passtest == True:
-        max_score = 0
-    the_test = {"name": args.title, "max_score": max_score, "score": 0  , "output": bod}
-    json_output_as_dict = { "tests" : [ the_test ] }
-    print(json.dumps(json_output_as_dict,indent=2,sort_keys=True))
-    exit(0)
-
-if args.input != None:
-    with open(args.input,'r') as infile:
-        f = infile.read()
-        # Gradescope truncates files > 100,000 chars and maven outputs are longer
-        # The bottom half of the file tends to be more useful, so let's just keep that
-        if len(f) > 99990:
-            f = f[-99990:]
-        the_test = {"name": args.title, "max_score": 1, "score": 0  , "output": f}
-        json_output_as_dict = { "tests" : [ the_test ] }
-        print(json.dumps(json_output_as_dict,indent=2,sort_keys=True))
-        exit(0)
 
 # Prints out the combination of all json files in the given directory
 if args.combine != None:
@@ -65,4 +42,29 @@ if args.combine != None:
     with open(os.path.join(args.combine, "results.json"), 'w') as outfile:
         json.dump(json_output_as_dict, outfile,indent=2,sort_keys=True)
     print("Found: ", json_files)
+    exit(0)
+
+bod = ""
+if args.input != None:
+    with open(args.input,'r') as infile:
+        bod = infile.read()
+        # Gradescope truncates files > 100,000 chars and maven outputs are longer
+        # The bottom half of the file tends to be more useful, so let's just keep that
+        if len(bod) > 99990:
+            bod = bod[-99990:]
+
+if args.title != None:
+    if args.maxpoints != None:
+        max_score = int(args.maxpoints)
+    else:
+        max_score = 1
+    if args.body != None:
+        bod = args.body
+    if args.passtest == True:
+        points = max_score
+    else:
+        points = 0
+    the_test = {"name": args.title, "max_score": max_score, "score": points  , "output": bod}
+    json_output_as_dict = { "tests" : [ the_test ] }
+    print(json.dumps(json_output_as_dict,indent=2,sort_keys=True))
     exit(0)

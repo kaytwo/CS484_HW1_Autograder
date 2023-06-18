@@ -1,56 +1,45 @@
-# Jest Autograder
+# Vitest Autograder
 
-This autograder is intended for use with assignments that use Jest,
-a test framework for JavaScript.
+This autograder is intended for use with assignments that use Vitest, a test
+framework for JavaScript.
 
-It borrows heavily from an [autograder written for Maven
+It borrows heavily from the [UCSB JavaScript gradescope autograder](https://github.com/ucsb-gradescope-tools/jest-autograder), which in turn borrwed from an [autograder written for Maven
 by Cole Bergmann](https://github.com/ucsb-gradescope-tools/maven-autograder), which in turn is based on earlier autograders by Phill Conrad.
-
-
-# References
-
-* [Jest JSON output documentation](https://jestjs.io/docs/en/configuration#testresultsprocessor-string)
-
 
 # Quick Start
 
-* Create a new empty private repo for your assignment, e.g. `lab01-AUTOGRADER-PRIVATE`
-* Add this repo as a remote, e.g.
-  ```
-  git remote add starter git@github.com:ucsb-gradescope-tools/jest-autograder.git
-  ```
-* Pull the  repo into yours: `git pull starter main`
-* In `localautograder`, put a sample solution to be checked against the autograder.
-  * Put a sample solution (reference implementation) in `localautograder/submission/javascript/src/main`
-  * If you also are testing a student test suite, optionally add a sample student test suite under
-    `localautograder/submission/javascript/src/test`
-* In `staging_main`, put your instructor test suite
-  * Tests go into `/staging_main/javascript/src/test` replacing
-    the files under `/staging_main/javascript/src/test/course`
-  * Copy your `package.json` into `staging_main/javascript/package.json`
-* You will likely not need to modify the `grading.config` file in the current
-  version, since the defaults are what you will almost always want, but
-  there is a reference below in case you do.
-* To test the autograder locally:
-  ```
-  ./run_autograder
-  cat localautograder/results/results.json
-  ```
-  
-  At first, there will be no graded tests.  We'll add those in the next step.
-* The instructor tests are the ones that live under `staging_main/javascript/src/test`.  So in that directory, visit every jest test in your test suite, and for each test that you want to be graded, add a prefix to the test label which indicates the number of points.
-  For example, instead of:
-  
-  ```javascript
-      test('(can create a Course object', () => {
-      ...
-  ```
+The core of this autograder runs at the bottom of `run_main_tests` - you can upload an autograder built using this repo and it will by default give:
+* 1 point for passing `npm run format`
+* 1 point for passing `npm run lint`
+* 1 point for passing `npm run typecheck`
 
-  Use:
-  ```javascript
-      test('(5 pts) can create a Course object', () => {
-      ...
-  ```
+It will also give N points for each passing `vitest` test, where N is a number of points given in the title of the test (e.g. 3 for `(3 pts) connects to database`), or if no points are given, 1.
+
+
+# Supplemental tests and configuration
+
+The setup script looks for files in two special directories, `merges/` and `overrides/`.
+
+* any files in the overrides directory will be copied into the submission
+  folder, overwriting whatever is there completely. For instance, if you are
+  enforcing a specific set of linter / type checker rules, you can include
+  `.eslintrc.cjs` and `tsconfig.json`. You can also ensure provided test cases
+  haven't been manipulated / removed from source control by providing them. This
+  will not stop enterprising students from including their own tests formatted
+  such that they receive extra credit, but that should be easy to find. 
+
+* any files in the merges directory will be [merged via
+  `jq`](https://stackoverflow.com/a/24904276/12887845) using the linked
+  technique. This can be helpful to ensure specific `package.json` scripts have
+  not been altered, but still allow students to add additional packages.
+
+# Running / debugging
+
+* To test the autograder locally:
+  * copy a submission into `localautograder/submission/`
+  * run `./run_autograder`
+  
+
 * To generate autograder for Gradescope:
   - run `./tools/make_autograder`
   - upload `Autograder.zip` to Gradescope
@@ -58,20 +47,6 @@ by Cole Bergmann](https://github.com/ucsb-gradescope-tools/maven-autograder), wh
 * To test on Gradescope:
   - create a separate repo with a sample solution (e.g. lab00-SOLUTION-PRIVATE)
   - either submit from GitHub directly, or use the download .zip feature of GitHub and submit that
-
-# Explanation of `grading.config` options
-  
-* `CONFIG_OUTPUT_PASSING_SANITY_TESTS=true` mean you want the zero point sanity checks to run.
-
-  This computes sanity checks such as `Student code successfully compiles without tests` and includes
-  these as "zero point" tests in the student-facing Gradescope output.
-  It is almost always a good idea to set this to `true`.
-
-* `CONFIG_TEST_STUDENT_MAIN=true` means you are testing a student main program against instructor defined
-  graded tests and `pom.xml` located in `staging_main`.
-  
-  Usually `true`; unless/until we add mutation testing of student
-  test suites, there is no reason to set this to anything else.
 
 # Testing multiple student solutions
 
@@ -120,4 +95,4 @@ for example.
 - `tools/` - Contains some useful tools. Read more at [tools/README.md](tools/README.md)
     - `json_generator.py` - Used as a helper to write Gradescope json files from the `run_autograder` script
     - `make_autograder` - Zips only the essential autograder files, leaving out any sample solutions or other files
-
+    - `vitest_to_gradescope.py` - transforms the json reporter format vitest output to the result.json gradescope output.

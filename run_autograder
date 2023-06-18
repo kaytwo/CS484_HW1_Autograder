@@ -10,7 +10,6 @@ else
     echo "[GS] Running on local dev machine, using ./localautograder/ "
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     OUTPUT_DIR="$DIR/localautograder/results"
-    echo "num args $#"
     if [ "$#" -lt 1 ]; then
       STUDENT_SUBMISSION_DIR="$DIR/localautograder/submission"
     else
@@ -18,23 +17,29 @@ else
     fi
 fi
 PYTHON_JSON_TOOL="$DIR/tools/json_generator.py"
-JEST_JSON_TOOL="$DIR/tools/jest_to_gradescope.py"
 
-source "$DIR"/grading.config
 # END: Sets correct directories based on local dev machine vs Gradescope production
 
+# overrides: files to copy into student tree, overwriting whatever is there
+# completely. for my projects that will probably be /.eslintrc.cjs,
+# /tsconfig.json, and instructor-defined test cases. Students could add extra
+# files but that should be easy to find and covered by academic integrity rules.
 
-###########################################################################################
-#
-#   Prepare student files for submission:
-#       - Unzip all zip files, search for /src/main/, and move to staging/src/main/
-#       - Print elegant error if src not found showing all files that were found
-#
-###########################################################################################
+cp -r "$DIR/overrides/." $STUDENT_SUBMISSION_DIR
+
+# merges: json files that should be merged via `jq -s '.[0] * .[1]' file1 file2`
+# this is mainly for package.json to make sure that the build scripts are what I
+# expect them to be. Not sure what this will be useful for besides making sure
+# that package.json scripts are not changed, probably not super useful.
+
+find "$DIR/merges" -type f -print0 | while read -d $'\0' file
+do
+  TMP=$(mktemp)
+  jq -s '.[0] * .[1]' "$STUDENT_SUBMISSION_DIR/$(basename "$file")" "$file" >> $TMP && mv $TMP "$STUDENT_SUBMISSION_DIR/$(basename "$file")"
+done
+
+
 cd $STUDENT_SUBMISSION_DIR
-
-echo '[GS] Extracting zips in student submission...'
-find . -name "*.zip" | while read filename; do unzip -o -d "`dirname "$filename"`" "$filename"; done;
 
 # Clean out __MACOSX directories and hidden files
 find . -name "__MACOSX" -exec rm -rf {} \;
@@ -42,54 +47,8 @@ find . -name "__MACOSX" -exec rm -rf {} \;
 # Remove old results.json files
 rm -r "$OUTPUT_DIR"/*.json
 
-# Searches student code for a DIR_TO_COPY($1), and copies it to DESTINATION_JAVA_SRC($2)
-# Called below
-copy_student_directory () {
-    DIR_TO_COPY=$1
-    DESTINATION_JAVA_SRC=$2
 
-    STUDENT_SUBMISSION_JAVA_SRC=$(find . -path "*/$DIR_TO_COPY");
-    if [ -n "$STUDENT_SUBMISSION_JAVA_SRC" ]
-    then
-        echo "[GS] Found student $DIR_TO_COPY directory at $STUDENT_SUBMISSION_JAVA_SRC";
-        echo "  [GS] Copying $STUDENT_SUBMISSION_JAVA_SRC to $DESTINATION_JAVA_SRC";
-        rm -rf $DESTINATION_JAVA_SRC/*
-        cp -r $STUDENT_SUBMISSION_JAVA_SRC/* $DESTINATION_JAVA_SRC/
-        echo "  [GS] Copy complete!"
-        # Optionally output successful finding of src/main
-        if [ "$CONFIG_OUTPUT_PASSING_SANITY_TESTS" = true ] ; then
-            python3 "$PYTHON_JSON_TOOL" -p -t "Found required $DIR_TO_COPY directory in student submission"> "$OUTPUT_DIR"/results01.json
-        fi
-    else
-        echo "[GS] Could not find "$DIR_TO_COPY" in unpacked student submission ("$STUDENT_SUBMISSION_DIR"). Exiting...";
-        FOUND_FILES=$(ls -R)
-
-        # Generate error for results.json
-        python3 "$PYTHON_JSON_TOOL" -t "Unable to find "$DIR_TO_COPY" in student submission" -b \
-        "The following files were found in student submission. If no directory structure is displayed,
-        try compressing your code before submitting it:
-        $FOUND_FILES" > "$OUTPUT_DIR"/results00.json
-        error_exit
-    fi
-}
-
-error_exit()
-{
-  echo "[GS] ERROR EXIT: Compiling results**.json files to results.json"
-  python3 $PYTHON_JSON_TOOL -c $OUTPUT_DIR
-  exit 1
-}
-
-if [ "$CONFIG_TEST_STUDENT_MAIN" = true ] ; then
-    DIRECTORY_SOUGHT="javascript/src/main"
-    copy_student_directory "$DIRECTORY_SOUGHT" "$DIR"/staging_main/${DIRECTORY_SOUGHT}
-
-    PUBLIC_FOLDER="javascript/public"
-    copy_student_directory "$PUBLIC_FOLDER" "$DIR"/staging_main/${PUBLIC_FOLDER}
-
-    "$DIR"/run_main_tests
-
-fi
+"$DIR"/run_main_tests
 
 # Compile json results
 echo "[GS] Compiling results**.json files to results.json"
