@@ -25,14 +25,14 @@ PYTHON_JSON_TOOL="$DIR/tools/json_generator.py"
 # /tsconfig.json, and instructor-defined test cases. Students could add extra
 # files but that should be easy to find and covered by academic integrity rules.
 
-cp -r "$DIR/overrides/" $STUDENT_SUBMISSION_DIR
+cp -r "$DIR/overrides/." $STUDENT_SUBMISSION_DIR
 
 # merges: json files that should be merged via `jq -s '.[0] * .[1]' file1 file2`
 # this is mainly for package.json to make sure that the build scripts are what I
 # expect them to be. Not sure what this will be useful for besides making sure
 # that package.json scripts are not changed, probably not super useful.
 
-find merges -type f -print0 | while read -d $'\0' file
+find "$DIR/merges" -type f -print0 | while read -d $'\0' file
 do
   TMP=$(mktemp)
   jq -s '.[0] * .[1]' "$STUDENT_SUBMISSION_DIR/$(basename "$file")" "$file" >> $TMP && mv $TMP "$STUDENT_SUBMISSION_DIR/$(basename "$file")"
