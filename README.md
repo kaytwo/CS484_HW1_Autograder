@@ -3,17 +3,17 @@
 This autograder is intended for use with assignments that use Vitest, a test
 framework for JavaScript.
 
-It borrows heavily from the [UCSB JavaScript gradescope autograder](https://github.com/ucsb-gradescope-tools/jest-autograder), which in turn borrwed from an [autograder written for Maven
+It borrows heavily from the [UCSB JavaScript gradescope autograder](https://github.com/ucsb-gradescope-tools/jest-autograder), which in turn borrowed from an [autograder written for Maven
 by Cole Bergmann](https://github.com/ucsb-gradescope-tools/maven-autograder), which in turn is based on earlier autograders by Phill Conrad.
 
 # Quick Start
 
-The core of this autograder runs at the bottom of `run_main_tests` - you can upload an autograder built using this repo and it will by default give:
-* 1 point for passing `npm run format`
-* 1 point for passing `npm run lint`
-* 1 point for passing `npm run typecheck`
+The core of this autograder runs at the bottom of `run_main_tests` - you can upload an Autograder.zip built using this repo (without making any changes) and it will by default give:
+* 3 points for passing `npm run format`
+* 3 points for passing `npm run lint`
+* 3 points for passing `npm run typecheck`
 
-It will also give N points for each passing `vitest` test, where N is a number of points given in the title of the test (e.g. 3 for `(3 pts) connects to database`), or if no points are given, 1.
+It will also give N points for each passing `vitest` test, where vitest is run via `npm run test`, and where N is a number of points given in the title of the test (e.g. 3 for `(3 pts) connects to database`), or if no points are given, 1.
 
 
 # Supplemental tests and configuration
