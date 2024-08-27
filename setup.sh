@@ -2,7 +2,8 @@
 
 apt-get -y install bash
 
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash - 
+curl -fsSL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
+bash nodesource_setup.sh
 
 # node, jq, playwright deps
 apt-get install -y nodejs jq libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
