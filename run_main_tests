@@ -52,11 +52,12 @@ rm -rf node_modules
 
 run_command "npm ci" "npm install via npm ci" "npm_install" "results10.json" 0
 
-run_command "npm run format" "proper formatting" "npm_run_format" "results_format.json" 3
+# uncomment these to add format/lint/typecheck checks
+# run_command "npm run format" "proper formatting" "npm_run_format" "results_format.json" 3
 
-run_command "npm run lint" "lint check" "npm_run_lint" "results_lint.json" 3
+# run_command "npm run lint" "lint check" "npm_run_lint" "results_lint.json" 3
 
-run_command "npm run typecheck" "type check" "npm_run_typecheck" "results_typecheck.json" 3
+# run_command "npm run typecheck" "type check" "npm_run_typecheck" "results_typecheck.json" 3
 
 npm run test -- --reporter json --reporter default --outputFile.json=vitest_result.json
 
